@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- Appender para el archivo de logs -->
+    <appender name="file" class="ch.qos.logback.core.FileAppender">
+        <file>/home/kerro/Project/Minus/Logs/MinusBackend.log</file> <!-- El archivo de log -->
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} - %msg%n</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeBasedRollingPolicy">
+            <maxFileSize>500MB</maxFileSize> <!-- Sobrescribe después de 500 MB -->
+        </rollingPolicy>
+    </appender>
+
+    <!-- Configuración del root logger -->
+    <root level="INFO">
+        <appender-ref ref="file" />
+    </root>
+
+</configuration>

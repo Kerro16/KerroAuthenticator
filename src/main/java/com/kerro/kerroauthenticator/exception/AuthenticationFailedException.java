@@ -1,0 +1,10 @@
+package com.kerro.kerroauthenticator.exception;
+
+public class AuthenticationFailedException extends AuthenticationException{
+    public AuthenticationFailedException(String message){
+        super(message);
+    }
+    public AuthenticationFailedException(String message, Throwable cause){
+        super(message, cause);
+    }
+}
