@@ -1,38 +1,39 @@
 package com.kerro.kerroauthenticator.jwt;
 
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.time.Duration;
 
 @Service
 public class TokenBlacklistService {
 
-    // token -> expiryEpochMillis
-    private final Map<String, Long> blacklist = new ConcurrentHashMap<>();
+    private final RedisTemplate<String, String> redisTemplate;
+    private final ValueOperations<String, String> valueOps;
+
+    public TokenBlacklistService(RedisTemplate<String, String> redisTemplate) {
+        this.redisTemplate = redisTemplate;
+        this.valueOps = redisTemplate.opsForValue();
+    }
 
     public void blacklistToken(String token, long expiryEpochMillis) {
         if (token == null || token.isBlank()) return;
-        blacklist.put(token, expiryEpochMillis);
+
+        long now = System.currentTimeMillis();
+        long ttlMillis = Math.max(expiryEpochMillis - now, 0);
+        Duration ttl = Duration.ofMillis(ttlMillis > 0 ? ttlMillis : 3600000); // 1h fallback
+
+        valueOps.set(token, "BLACKLISTED", ttl);
     }
 
     public boolean isBlacklisted(String token) {
         if (token == null || token.isBlank()) return false;
-        Long expiry = blacklist.get(token);
-        if (expiry == null) return false;
-        if (expiry <= Instant.now().toEpochMilli()) {
-            blacklist.remove(token);
-            return false;
-        }
-        return true;
+        return redisTemplate.hasKey(token);
     }
 
-    // Limpieza periódica de tokens expirados (cada 5 minutos)
     @Scheduled(fixedDelayString = "PT5M")
     public void cleanup() {
-        long now = Instant.now().toEpochMilli();
-        blacklist.entrySet().removeIf(entry -> entry.getValue() <= now);
     }
 }

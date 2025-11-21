@@ -21,7 +21,7 @@ public class JwtService {
     private final long expirationMillis;
 
     public JwtService(@Value("${security.jwt.secret-key}") String secret,
-                      @Value("${security.jwt.expiration-time:3600000}") long expirationMillis) {
+                      @Value("${JWT_EXPIRATION}") long expirationMillis) {
         byte[] keyBytes = decodeSecret(secret);
         this.signingKey = Keys.hmacShaKeyFor(keyBytes);
         this.expirationMillis = expirationMillis;
@@ -49,7 +49,6 @@ public class JwtService {
         String hex = s.startsWith("0x") ? s.substring(2) : s;
         int len = hex.length();
         if ((len & 1) != 0) {
-            // si longitud impar, prefijar 0
             hex = "0" + hex;
             len = hex.length();
         }

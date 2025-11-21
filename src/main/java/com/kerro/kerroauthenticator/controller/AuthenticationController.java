@@ -82,11 +82,18 @@ public class AuthenticationController {
     @PostMapping("/logout")
     public ResponseEntity<Map<String, String>> logout(@RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
         log.info("Logout request received");
+
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
             return ResponseEntity.badRequest().body(Map.of("message", "No Authorization Bearer token provided"));
         }
 
         String token = authorizationHeader.substring(7).trim();
+
+        if (tokenBlacklistService.isBlacklisted(token)) {
+            log.warn("Token already blacklisted");
+            return ResponseEntity.ok(Map.of("message", "Token already invalidated"));
+        }
+
         try {
             long expiryEpochMillis = jwtService.getExpirationEpochMillis(token);
             tokenBlacklistService.blacklistToken(token, expiryEpochMillis);
